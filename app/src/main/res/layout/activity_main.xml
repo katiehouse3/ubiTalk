@@ -10,17 +10,43 @@
     tools:deviceIds="wear"
     android:padding="@dimen/box_inset_layout_padding">
 
-    <FrameLayout
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/frameLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="@dimen/inner_frame_layout_padding"
-        app:boxedEdges="all">
+        android:padding="@dimen/inner_frame_layout_padding">
+
+        <Button
+            android:id="@+id/button"
+            style="@android:style/Widget.Button"
+            android:layout_width="138dp"
+            android:layout_height="133dp"
+            android:layout_marginBottom="36dp"
+            android:text="Start listening"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/button2"
+            style="@android:style/Widget.Button"
+            android:layout_width="80dp"
+            android:layout_height="64dp"
+            android:text="Stop listening"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/button" />
 
         <TextView
             android:id="@+id/text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hello_world" />
+            android:layout_width="122dp"
+            android:layout_height="31dp"
+            android:text=""
+            tools:layout_editor_absoluteX="21dp"
+            tools:layout_editor_absoluteY="145dp" />
 
-    </FrameLayout>
+    </android.support.constraint.ConstraintLayout>
 </android.support.wear.widget.BoxInsetLayout>
