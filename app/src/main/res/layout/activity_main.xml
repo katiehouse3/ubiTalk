@@ -17,7 +17,7 @@
         android:padding="@dimen/inner_frame_layout_padding">
 
         <Button
-            android:id="@+id/btn_speak"
+            android:id="@+id/button_speaking"
             style="@android:style/Widget.Material.Button.Colored"
             android:layout_width="111dp"
             android:layout_height="59dp"
@@ -32,13 +32,12 @@
             style="@android:style/Widget.Material.Light.Button.Toggle"
             android:layout_width="107dp"
             android:layout_height="64dp"
-            android:onClick="stop"
             android:text="Stop listening"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.486"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btn_speak"
+            app:layout_constraintTop_toBottomOf="@+id/button_speaking"
             app:layout_constraintVertical_bias="0.083" />
 
         <TextView
@@ -53,11 +52,11 @@
             android:id="@+id/textView1"
             android:layout_width="137dp"
             android:layout_height="22dp"
-            android:text="textView1"
-            app:layout_constraintBottom_toTopOf="@+id/btn_speak"
+            android:text="Listener"
+            app:layout_constraintBottom_toTopOf="@+id/button_speaking"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/btn_speak"
+            app:layout_constraintStart_toEndOf="@+id/button_speaking"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="1.0" />
