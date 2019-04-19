@@ -25,16 +25,21 @@ import android.util.Log;
 public class MainActivity extends WearableActivity
 {
     private static final int REQ_CODE_SPEECH_INPUT = 100;
-    private int n_filler;
+    private int n_words;
+    private int n_words_total;
     Button start;
     Button stop;
     ConstraintLayout layout;
     Handler customHandler;
 
-    String[] colors = new String[]{"#61F013", "#8FF011", "#BFF00F", "#EFF00E", "#F0C00C",
-            "#F08F0B", "#F05D09", "#F02A08", "#F00616", "#EF0546"};
-    int col_index = 0;
+    final String BLUE = "#448cff";
+    final String RED = "##ea072c";
+    final String GREEN = "#08c935";
 
+    final int slow = 1;
+    final int fast = 3;
+
+    String speed = "On pace";
     TextView mText;
     private SpeechRecognizer sr;
     private static final String TAG = "MyStt3Activity";
@@ -66,9 +71,9 @@ public class MainActivity extends WearableActivity
             public void onClick(View v) {
                 start.setVisibility(View.INVISIBLE);
                 stop.setVisibility(View.VISIBLE);
-                col_index = 0;
-                n_filler = 0;
-                customHandler.postDelayed(updateTimerThread, 0);
+                n_words = 0;
+                n_words_total = 0;
+                //customHandler.postDelayed(updateTimerThread, 0);
 
                 Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
                 intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
@@ -97,6 +102,8 @@ public class MainActivity extends WearableActivity
                 layout.setBackgroundColor(Color.DKGRAY);
                 customHandler.removeCallbacksAndMessages(null);
                 sr.stopListening();
+                //sr.cancel();
+                //sr.destroy();
             }
         });
 
@@ -104,8 +111,7 @@ public class MainActivity extends WearableActivity
         // Enables Always-on
         setAmbientEnabled();
     }
-    class listener implements RecognitionListener
-    {
+    class listener implements RecognitionListener {
         public void onReadyForSpeech(Bundle params)
         {
             Log.d(TAG, "onReadyForSpeech");
@@ -136,12 +142,21 @@ public class MainActivity extends WearableActivity
             String str = new String();
             Log.d(TAG, "onResults " + results);
             ArrayList<String> data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-            //for (int i = 0; i < data.size(); i++)
-            //{
-            //    Log.d(TAG, "result " + data.get(i));
-            //    str += data.get(i);
-            //}
-            //mText.setText("results: "+String.valueOf(data));
+            for (int i = 0; i < data.size(); i++)
+            {
+                Log.d(TAG, "result " + data.get(i));
+                str += data.get(i);
+            }
+            /*
+            mText.setText("results: "+String.valueOf(data));
+            n_words = data.size();
+            n_words_total += n_words;
+            String curr_speed = checkSpeed(n_words_total, 5000);
+            if (curr_speed != speed) {
+                speed = curr_speed;
+                changeColor(speed);
+            }
+            */
             mText.setText(data.get(0));
 
         }
@@ -158,25 +173,50 @@ public class MainActivity extends WearableActivity
         {
             Log.d(TAG, "onEvent " + eventType);
         }
+
     }
 
-    private void changeColors() {
-        layout.setBackgroundColor(Color.parseColor(colors[col_index]));
-        //mText.setText(Integer.toString(n_filler));
-        if (col_index < 9) {
-            col_index++;
-            n_filler++;
+    private void changeColor(String speed) {
+        switch(speed) {
+            case "Slow":
+                layout.setBackgroundColor(Color.parseColor(BLUE));
+                break;
+            case "Fast":
+                layout.setBackgroundColor(Color.parseColor(RED));
+                break;
+            default:
+                layout.setBackgroundColor(Color.parseColor(GREEN));
         }
+    //mText.setText(Integer.toString(n_filler));
+}
+
+    //interval supplied in milliseconds
+    private String checkSpeed(int n_words, int interval) {
+        int curr_speed = 0;
+        long time = System.currentTimeMillis();
+        long update = 0;
+
+        if ((time - update) > interval) {
+            curr_speed = n_words / 60000; //calculate words per minute
     }
 
-    private Runnable updateTimerThread = new Runnable()
-    {
-        public void run()
-        {
-            changeColors();
-            customHandler.postDelayed(this, 1000);
-        }
-    };
+    if (curr_speed <= slow){
+        return "Slow";
+    } else if (curr_speed > slow && curr_speed < fast) {
+        return "On pace";
+    } else {
+        return "Fast";
+    }
+    }
+
+    //private Runnable updateTimerThread = new Runnable()
+    //{
+     //   public void run()
+     //   {
+     //       changeColors();
+     //       customHandler.postDelayed(this, 1000);
+     //   }
+    //};
 
     private void requestRecordAudioPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

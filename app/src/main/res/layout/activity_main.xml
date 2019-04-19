@@ -43,16 +43,17 @@
         <TextView
             android:id="@+id/text"
             android:layout_width="122dp"
-            android:layout_height="31dp"
+            android:layout_height="33dp"
             android:text=""
-            tools:layout_editor_absoluteX="21dp"
-            tools:layout_editor_absoluteY="145dp" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:layout_editor_absoluteY="3dp" />
 
         <TextView
             android:id="@+id/textView1"
             android:layout_width="137dp"
             android:layout_height="22dp"
-            android:text="Listener"
             app:layout_constraintBottom_toTopOf="@+id/button_speaking"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
