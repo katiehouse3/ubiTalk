@@ -17,18 +17,18 @@
         android:padding="@dimen/inner_frame_layout_padding">
 
         <Button
-            android:id="@+id/button_speaking"
+            android:id="@+id/speak"
             style="@android:style/Widget.Material.Button.Colored"
             android:layout_width="111dp"
             android:layout_height="59dp"
             android:layout_marginBottom="60dp"
-            android:text="Start listening"
+            android:text="@string/start_listening"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
         <Button
-            android:id="@+id/button2"
+            android:id="@+id/stop"
             style="@android:style/Widget.Material.Light.Button.Toggle"
             android:layout_width="107dp"
             android:layout_height="64dp"
@@ -37,7 +37,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.486"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/button_speaking"
+            app:layout_constraintTop_toBottomOf="@+id/speak"
             app:layout_constraintVertical_bias="0.083" />
 
         <TextView
@@ -49,14 +49,14 @@
             tools:layout_editor_absoluteY="145dp" />
 
         <TextView
-            android:id="@+id/textView1"
-            android:layout_width="137dp"
-            android:layout_height="22dp"
+            android:id="@+id/write"
+            android:layout_width="169dp"
+            android:layout_height="108dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="72dp"
             android:text="Listener"
-            app:layout_constraintBottom_toTopOf="@+id/button_speaking"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/button_speaking"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="1.0" />
