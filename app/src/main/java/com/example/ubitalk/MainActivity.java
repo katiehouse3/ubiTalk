@@ -94,6 +94,7 @@ public class MainActivity extends WearableActivity {
                 textView.setText("");
                 speak.setVisibility(View.VISIBLE);
                 stop.setVisibility(View.INVISIBLE);
+                layout.setBackgroundColor(Color.DKGRAY);
             }
         });
 

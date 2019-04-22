@@ -56,10 +56,12 @@ public class MyService extends Service {
     final String GREEN = "#08c935";
 
     // Speed of speech
-    final int slow = 1;
-    final int fast = 3;
-    private int n_words;
-    private int n_words_total;
+    final double slow = 1.0;
+    final double fast = 3.0;
+    private double n_words;
+    private double n_words_total;
+
+    private long previous_time = System.currentTimeMillis();
 
 
     String speed = "On pace";
@@ -67,6 +69,7 @@ public class MyService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
         mSpeechRecognizer.setRecognitionListener(new SpeechRecognitionListener());
@@ -76,8 +79,7 @@ public class MyService extends Service {
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
-
-        Log.i("service", "oncreate");
+        
     }
 
     protected static class IncomingHandler extends Handler {
@@ -144,7 +146,7 @@ public class MyService extends Service {
 
             @Override
             public void onFinish() {
-                Log.i("speech", "FINISHED");
+                Log.i("UPDATE", "FINISHED");
                 mIsCountDownOn = false;
                 Message message;
                 message = Message.obtain(null, MSG_RECOGNIZER_CANCEL);
@@ -182,13 +184,13 @@ public class MyService extends Service {
         @Override
         public void onBeginningOfSpeech() {
             // speech input will be processed, so there is no need for count down anymore
-            Log.i("speech", "BEGINNING OF SPEECH");
+            Log.i("UPDATE", "BEGINNING OF SPEECH");
             if (mIsCountDownOn) {
-                Log.i("speech", "countdown on BEGINNING OF SPEECH");
+                Log.i("UPDATE", "countdown on BEGINNING OF SPEECH");
                 mIsCountDownOn = false;
                 mNoSpeechCountDown.cancel();
             }
-            Log.i("speech", "countdown off BEGINNING OF SPEECH");
+            Log.i("UPDATE", "countdown off BEGINNING OF SPEECH");
             //Log.d(TAG, "onBeginingOfSpeech"); //$NON-NLS-1$
         }
 
@@ -224,8 +226,7 @@ public class MyService extends Service {
 
         @Override
         public void onPartialResults(Bundle partialResults) {
-
-            Log.i("speech", "onPartialResults");
+            Log.i("UPDATE", "onPartialResults");
             ArrayList data = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
             String word = (String) data.get(data.size() - 1);
             if (Currentdata == null) {
@@ -237,13 +238,14 @@ public class MyService extends Service {
 
             newcurrent = MainActivity.textView.getText().toString();
             identify = 1;
-            Log.i("patial", "" + word);
-
+            Log.i("UPDATE", "" + word);
 
             n_words = data.size();
             n_words_total += n_words;
-            Log.i("ADDEDDD",  "Number of Words: " +  n_words);
+            Log.i("UPDATE",  "TOTAL Number of Words: " +  n_words_total);
             String curr_speed = checkSpeed(n_words_total, 5000);
+            Log.i("Update", "Current Speed is" + speed);
+            Log.i("Update", "New Speed is" + curr_speed);
             if (curr_speed != speed) {
                 speed = curr_speed;
                 changeColor(speed);
@@ -257,7 +259,7 @@ public class MyService extends Service {
                 MainActivity.textView.setText("");
                 mNoSpeechCountDown.start();
             }
-            Log.i("service", "onReadyForSpeech"); //$NON-NLS-1$
+            Log.i("UPDATE", "onReadyForSpeech"); //$NON-NLS-1$
         }
 
         @Override
@@ -279,7 +281,7 @@ public class MyService extends Service {
             }
             Currentdata = MainActivity.textView.getText().toString();
 
-            Log.i("service", "" + Currentdata);
+            Log.i("UPDATE", "" + Currentdata);
 
             if (mIsListening == true) {
                 mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
@@ -289,22 +291,12 @@ public class MyService extends Service {
 
         @Override
         public void onRmsChanged(float rmsdB) {
-            Log.i("TEST", "MY SERVICE on RMS changed");
+            Log.i("UPDATE", "MY SERVICE on RMS changed");
         }
 
     }
     private void startListening(String speed) {
-        switch(speed) {
-            case "Slow":
-                MainActivity.layout.setBackgroundColor(Color.parseColor(BLUE));
-                break;
-            case "Fast":
-                MainActivity.layout.setBackgroundColor(Color.parseColor(RED));
-                break;
-            default:
-                MainActivity.layout.setBackgroundColor(Color.parseColor(GREEN));
-        }
-        //mText.setText(Integer.toString(n_filler));
+        MainActivity.layout.setBackgroundColor(Color.parseColor(GREEN));
     }
     private void changeColor(String speed) {
         switch(speed) {
@@ -319,18 +311,22 @@ public class MyService extends Service {
         }
         //mText.setText(Integer.toString(n_filler));
     }
-    private String checkSpeed(int n_words, int interval) {
-        int curr_speed = 0;
-        long time = System.currentTimeMillis();
-        long update = 0;
-        Log.i("ADDED",  "time " +  time);
-        Log.i("ADDED",  "interval " +  interval);
+    private String checkSpeed(double n_words, double interval) {
+        double curr_speed = 0;
+        long new_time = System.currentTimeMillis();
+        long time_change = new_time - previous_time;
+        Log.i("UPDATE",  "interval:" +  interval);
+        Log.i("UPDATE", "time change:" + time_change);
 
-        if ((time - update) > interval) {
-            curr_speed = n_words / 60000; //calculate words per minute
-            Log.i("ADDED",  "curr_speed " +  curr_speed);
+        if ((time_change) > interval) {
+            curr_speed = n_words / (time_change / 1000); //calculate words per second
+            n_words_total = 0;
+            previous_time = new_time;
+            Log.i("UPDATE",  "curr_speed " +  curr_speed);
         }
 
+        Log.i("UPDATE", "Slow:" + slow);
+        Log.i("UPDATE", "Is slow? " + (curr_speed <= slow));
         if (curr_speed <= slow){
             return "Slow";
         } else if (curr_speed > slow && curr_speed < fast) {
@@ -338,5 +334,6 @@ public class MyService extends Service {
         } else {
             return "Fast";
         }
+
     }
 }
