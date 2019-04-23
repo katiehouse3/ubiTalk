@@ -113,11 +113,11 @@ public class MainActivity extends WearableActivity {
                 Toast.makeText(MainActivity.this, "Start Speaking", Toast.LENGTH_SHORT).show();
                 speak.setVisibility(View.INVISIBLE);
                 stop.setVisibility(View.VISIBLE);
-                layout.setBackgroundColor(Color.DKGRAY);
-
+                MainActivity.layout.setBackgroundColor(Color.parseColor(GREEN));
             }
         });
     }
+
 
     class Listner implements RecognitionListener {
 

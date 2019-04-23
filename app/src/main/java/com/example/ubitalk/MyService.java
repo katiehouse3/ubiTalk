@@ -29,13 +29,13 @@ import java.util.List;
 
 public class MyService extends Service {
 
-    //Use audio manageer services
+    //Use audio manager services
     static protected AudioManager mAudioManager;
     protected SpeechRecognizer mSpeechRecognizer;
     protected Intent mSpeechRecognizerIntent;
     protected final Messenger mServerMessenger = new Messenger(new IncomingHandler(this));
 
-    //To turn screen On uitll lock phone
+    //To turn screen On until lock phone
     PowerManager.WakeLock wakeLock;
     protected boolean mIsListening;
     protected volatile boolean mIsCountDownOn;
@@ -52,17 +52,16 @@ public class MyService extends Service {
 
     // Layout Colors
     final String BLUE = "#448cff";
-    final String RED = "##ea072c";
+    final String RED = "#ea072c";
     final String GREEN = "#08c935";
 
     // Speed of speech
-    final double slow = 1.0;
-    final double fast = 3.0;
+    final double slow = 3;
+    final double fast = 8;
     private double n_words;
     private double n_words_total;
 
-    private long previous_time = System.currentTimeMillis();
-
+    private long start_time;
 
     String speed = "On pace";
 
@@ -79,7 +78,10 @@ public class MyService extends Service {
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
-        
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 10000);
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 10000);
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1000);
+        start_time = System.currentTimeMillis();
     }
 
     protected static class IncomingHandler extends Handler {
@@ -100,7 +102,7 @@ public class MyService extends Service {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                         // turn off beep sound
                         if (!mIsStreamSolo) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                 mAudioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, 0);
                             } else {
                                 mAudioManager.setStreamMute(AudioManager.STREAM_MUSIC, true);
@@ -117,7 +119,7 @@ public class MyService extends Service {
 
                 case MSG_RECOGNIZER_CANCEL:
                     if (mIsStreamSolo) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                             mAudioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, 0);
                         } else {
                             mAudioManager.setStreamMute(AudioManager.STREAM_MUSIC, true);
@@ -136,7 +138,7 @@ public class MyService extends Service {
     protected CountDownTimer mNoSpeechCountDown;
 
     {
-        mNoSpeechCountDown = new CountDownTimer(10000, 2000) {
+        mNoSpeechCountDown = new CountDownTimer(50000, 10000) {
 
             @Override
             public void onTick(long millisUntilFinished) {
@@ -189,87 +191,94 @@ public class MyService extends Service {
                 Log.i("UPDATE", "countdown on BEGINNING OF SPEECH");
                 mIsCountDownOn = false;
                 mNoSpeechCountDown.cancel();
-            }
-            Log.i("UPDATE", "countdown off BEGINNING OF SPEECH");
-            //Log.d(TAG, "onBeginingOfSpeech"); //$NON-NLS-1$
         }
+        Log.i("UPDATE", "countdown off BEGINNING OF SPEECH");
+        //Log.d(TAG, "onBeginningOfSpeech"); //$NON-NLS-1$
+    }
 
-        @Override
-        public void onBufferReceived(byte[] buffer) {
+    @Override
+    public void onBufferReceived(byte[] buffer) {
 
+    }
+
+    @Override
+    public void onEndOfSpeech() {
+        Log.d("UPDATE", "onEndOfSpeech"); //$NON-NLS-1$
+    }
+
+    @Override
+    public void onError(int error) {
+        if (mIsCountDownOn) {
+            mIsCountDownOn = false;
+            mNoSpeechCountDown.cancel();
         }
-
-        @Override
-        public void onEndOfSpeech() {
-            //Log.d(TAG, "onEndOfSpeech"); //$NON-NLS-1$
-        }
-
-        @Override
-        public void onError(int error) {
-            if (mIsCountDownOn) {
-                mIsCountDownOn = false;
-                mNoSpeechCountDown.cancel();
-            }
-            mIsListening = false;
-            Message message = Message.obtain(null, MSG_RECOGNIZER_START_LISTENING);
-            try {
-                mServerMessenger.send(message);
-            } catch (RemoteException e) {
-
-            }
-        }
-
-        @Override
-        public void onEvent(int eventType, Bundle params) {
+        mIsListening = false;
+        Message message = Message.obtain(null, MSG_RECOGNIZER_START_LISTENING);
+        try {
+            mServerMessenger.send(message);
+        } catch (RemoteException e) {
 
         }
+    }
 
-        @Override
-        public void onPartialResults(Bundle partialResults) {
-            Log.i("UPDATE", "onPartialResults");
-            ArrayList data = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-            String word = (String) data.get(data.size() - 1);
-            if (Currentdata == null) {
-                MainActivity.textView.setText("" + word);
-            } else {
-                MainActivity.textView.setText(Currentdata + " " + word);
-                //MainActivity.textView.setSelection(MainActivity.textView.getText().length());
-            }
+    @Override
+    public void onEvent(int eventType, Bundle params) {
 
-            newcurrent = MainActivity.textView.getText().toString();
-            identify = 1;
-            Log.i("UPDATE", "" + word);
+    }
 
-            n_words = data.size();
-            n_words_total += n_words;
-            Log.i("UPDATE",  "TOTAL Number of Words: " +  n_words_total);
-            String curr_speed = checkSpeed(n_words_total, 5000);
-            Log.i("Update", "Current Speed is" + speed);
-            Log.i("Update", "New Speed is" + curr_speed);
-            if (curr_speed != speed) {
-                speed = curr_speed;
-                changeColor(speed);
-            }
+    @Override
+    public void onPartialResults(Bundle partialResults) {
+        Log.i("UPDATE", "onPartialResults");
+        ArrayList data = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+        String word = (String) data.get(data.size() - 1);
+        //if (Currentdata == null) {
+        //MainActivity.textView.setText("" + word);
+        //} else {
+        //MainActivity.textView.setText(Currentdata + " " + word);
+        //MainActivity.textView.setSelection(MainActivity.textView.getText().length());
+        //}
+
+        long curr_time = System.currentTimeMillis();
+
+        newcurrent = MainActivity.textView.getText().toString();
+        identify = 1;
+        Log.i("UPDATE", "" + word);
+
+        n_words = data.size();
+        String curr_speed = speed;
+        n_words_total += n_words;
+        if (curr_time - start_time > 5000) {
+            curr_speed = checkSpeed(n_words_total);
+            start_time = curr_time;
+            n_words_total = 0;
         }
-
-        @Override
-        public void onReadyForSpeech(Bundle params) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                mIsCountDownOn = true;
-                MainActivity.textView.setText("");
-                mNoSpeechCountDown.start();
-            }
-            Log.i("UPDATE", "onReadyForSpeech"); //$NON-NLS-1$
+        Log.i("UPDATE", "TOTAL Number of Words: " + n_words_total);
+        Log.i("Update", "Current Speed is" + speed);
+        Log.i("Update", "New Speed is" + curr_speed);
+        if (curr_speed != speed) {
+            speed = curr_speed;
+            changeColor(speed);
         }
+    }
 
-        @Override
-        public void onResults(Bundle results) {
+    @Override
+    public void onReadyForSpeech(Bundle params) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            //mIsCountDownOn = true;
+            MainActivity.textView.setText("");
+            //mNoSpeechCountDown.start();
+        }
+        Log.i("UPDATE", "onReadyForSpeech"); //$NON-NLS-1$
+    }
 
-            //Log.d(TAG, "onResults"); //$NON-NLS-1$
-             //$NON-NLS-1$
-            ArrayList data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-            String word = (String) data.get(data.size() - 1);
+    @Override
+    public void onResults(Bundle results) {
 
+        //Log.d(TAG, "onResults"); //$NON-NLS-1$
+        //$NON-NLS-1$
+        //ArrayList data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+        //String word = (String) data.get(data.size() - 1);
+/*
             if (result == 0) {
                 MainActivity.textView.setText(word);
                 Currentdata = MainActivity.textView.getText().toString();
@@ -287,17 +296,44 @@ public class MyService extends Service {
                 mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
             }
             result = 0;
-        }
 
-        @Override
-        public void onRmsChanged(float rmsdB) {
-            Log.i("UPDATE", "MY SERVICE on RMS changed");
-        }
+            long curr_time = System.currentTimeMillis();
+
+            newcurrent = MainActivity.textView.getText().toString();
+            identify = 1;
+            Log.i("UPDATE", "" + word);
+
+            n_words = data.size();
+            String curr_speed = speed;
+            if (curr_time - start_time > 5000) {
+                curr_speed = checkSpeed(n_words_total);
+                start_time = curr_time;
+                n_words_total = 0;
+            }
+            n_words_total += n_words;
+            Log.i("UPDATE",  "TOTAL Number of Words: " +  n_words_total);
+            //String curr_speed = checkSpeed(n_words_total, 5000);
+            Log.i("Update", "Current Speed is" + speed);
+            Log.i("Update", "New Speed is" + curr_speed);
+            if (curr_speed != speed) {
+                speed = curr_speed;
+                changeColor(speed);
+            }
+                        */
 
     }
+
+    @Override
+    public void onRmsChanged(float rmsdB) {
+        Log.i("UPDATE", "MY SERVICE on RMS changed");
+    }
+
     private void startListening(String speed) {
         MainActivity.layout.setBackgroundColor(Color.parseColor(GREEN));
     }
+
+}
+
     private void changeColor(String speed) {
         switch(speed) {
             case "Slow":
@@ -309,24 +345,15 @@ public class MyService extends Service {
             default:
                 MainActivity.layout.setBackgroundColor(Color.parseColor(GREEN));
         }
-        //mText.setText(Integer.toString(n_filler));
     }
-    private String checkSpeed(double n_words, double interval) {
+
+    private String checkSpeed(double n_words){
+
         double curr_speed = 0;
-        long new_time = System.currentTimeMillis();
-        long time_change = new_time - previous_time;
-        Log.i("UPDATE",  "interval:" +  interval);
-        Log.i("UPDATE", "time change:" + time_change);
 
-        if ((time_change) > interval) {
-            curr_speed = n_words / (time_change / 1000); //calculate words per second
-            n_words_total = 0;
-            previous_time = new_time;
-            Log.i("UPDATE",  "curr_speed " +  curr_speed);
-        }
+        curr_speed = n_words / 5; // calculate words per second
+        Log.i("UPDATE",  "curr_speed " +  curr_speed);
 
-        Log.i("UPDATE", "Slow:" + slow);
-        Log.i("UPDATE", "Is slow? " + (curr_speed <= slow));
         if (curr_speed <= slow){
             return "Slow";
         } else if (curr_speed > slow && curr_speed < fast) {

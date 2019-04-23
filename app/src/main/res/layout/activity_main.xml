@@ -29,16 +29,14 @@
 
         <Button
             android:id="@+id/stop"
-            style="@android:style/Widget.Material.Light.Button.Toggle"
-            android:layout_width="107dp"
-            android:layout_height="64dp"
+            style="@android:style/Widget.Material.Button.Colored"
+            android:layout_width="111dp"
+            android:layout_height="59dp"
+            android:layout_marginBottom="60dp"
             android:text="Stop listening"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.486"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/speak"
-            app:layout_constraintVertical_bias="0.083" />
+            app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
             android:id="@+id/text"
