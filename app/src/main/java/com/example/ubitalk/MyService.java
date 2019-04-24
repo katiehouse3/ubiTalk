@@ -56,7 +56,7 @@ public class MyService extends Service {
     final String GREEN = "#08c935";
 
     // Speed of speech
-    final double slow = 3;
+    final double slow = 4;
     final double fast = 8;
     private double n_words;
     private double n_words_total;
@@ -78,10 +78,9 @@ public class MyService extends Service {
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 10000);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 10000);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1000);
-        start_time = System.currentTimeMillis();
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1000);
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1000);
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1500);
     }
 
     protected static class IncomingHandler extends Handler {
@@ -138,7 +137,7 @@ public class MyService extends Service {
     protected CountDownTimer mNoSpeechCountDown;
 
     {
-        mNoSpeechCountDown = new CountDownTimer(50000, 10000) {
+        mNoSpeechCountDown = new CountDownTimer(10000, 5000) {
 
             @Override
             public void onTick(long millisUntilFinished) {
@@ -193,7 +192,8 @@ public class MyService extends Service {
                 mNoSpeechCountDown.cancel();
         }
         Log.i("UPDATE", "countdown off BEGINNING OF SPEECH");
-        //Log.d(TAG, "onBeginningOfSpeech"); //$NON-NLS-1$
+            start_time = System.currentTimeMillis();
+            //Log.d(TAG, "onBeginningOfSpeech"); //$NON-NLS-1$
     }
 
     @Override

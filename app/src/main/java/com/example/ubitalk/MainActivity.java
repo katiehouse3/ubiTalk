@@ -54,15 +54,8 @@ public class MainActivity extends WearableActivity {
 
     // Layout Colors
     final String BLUE = "#448cff";
-    final String RED = "##ea072c";
+    final String RED = "#ea072c";
     final String GREEN = "#08c935";
-
-    // Speed of speech
-    final int slow = 1;
-    final int fast = 3;
-    private int n_words;
-    private int n_words_total;
-
 
     String speed = "On pace";
 
@@ -98,8 +91,8 @@ public class MainActivity extends WearableActivity {
             }
         });
 
-        sr = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
-        sr.setRecognitionListener(new Listner());
+        //sr = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
+        //sr.setRecognitionListener(new Listner());
 
         speak.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -118,7 +111,7 @@ public class MainActivity extends WearableActivity {
         });
     }
 
-
+/*
     class Listner implements RecognitionListener {
 
         @Override
@@ -192,7 +185,6 @@ public class MainActivity extends WearableActivity {
             ArrayList data = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
             String word = (String) data.get(data.size() - 1);
             textView.setText(word);
-            */
             String str = new String();
             ArrayList<String> data = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
             for (int i = 0; i < data.size(); i++)
@@ -265,6 +257,8 @@ public class MainActivity extends WearableActivity {
             return "Fast";
         }
     }
+    */
+
     private void askForPermission(String permission, Integer requestCode) {
         if (ContextCompat.checkSelfPermission(MainActivity.this, permission) != PackageManager.PERMISSION_GRANTED) {
 
