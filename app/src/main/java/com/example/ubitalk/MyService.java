@@ -23,19 +23,20 @@ import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.util.Log;
 
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.List;
 
 public class MyService extends Service {
 
-    //Use audio manager services
+    //Use audio manageer services
     static protected AudioManager mAudioManager;
     protected SpeechRecognizer mSpeechRecognizer;
     protected Intent mSpeechRecognizerIntent;
     protected final Messenger mServerMessenger = new Messenger(new IncomingHandler(this));
 
-    //To turn screen On until lock phone
+    //To turn screen On uitll lock phone
     PowerManager.WakeLock wakeLock;
     protected boolean mIsListening;
     protected volatile boolean mIsCountDownOn;
@@ -56,14 +57,15 @@ public class MyService extends Service {
     final String GREEN = "#08c935";
 
     // Speed of speech
-    final double slow = 4;
-    final double fast = 8;
+    final double slow = 3.0;
+    final double fast = 8.5;
     private double n_words;
     private double n_words_total;
-
     private long start_time;
 
     String speed = "On pace";
+
+    PrintWriter writer;
 
     @Override
     public void onCreate() {
@@ -78,9 +80,14 @@ public class MyService extends Service {
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1000);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1000);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1500);
+
+
+        try {
+            FileOutputStream os = openFileOutput("dat.txt", Context.MODE_PRIVATE);
+            writer = new PrintWriter(os);
+        } catch (Exception e) {
+        }
+
     }
 
     protected static class IncomingHandler extends Handler {
@@ -101,7 +108,7 @@ public class MyService extends Service {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                         // turn off beep sound
                         if (!mIsStreamSolo) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
                                 mAudioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, 0);
                             } else {
                                 mAudioManager.setStreamMute(AudioManager.STREAM_MUSIC, true);
@@ -118,7 +125,7 @@ public class MyService extends Service {
 
                 case MSG_RECOGNIZER_CANCEL:
                     if (mIsStreamSolo) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
                             mAudioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, 0);
                         } else {
                             mAudioManager.setStreamMute(AudioManager.STREAM_MUSIC, true);
@@ -137,7 +144,7 @@ public class MyService extends Service {
     protected CountDownTimer mNoSpeechCountDown;
 
     {
-        mNoSpeechCountDown = new CountDownTimer(10000, 5000) {
+        mNoSpeechCountDown = new CountDownTimer(10000, 2000) {
 
             @Override
             public void onTick(long millisUntilFinished) {
@@ -172,6 +179,9 @@ public class MyService extends Service {
         if (mSpeechRecognizer != null) {
             mSpeechRecognizer.destroy();
         }
+
+        writer.flush();
+        writer.close();
     }
 
     @Nullable
@@ -190,95 +200,98 @@ public class MyService extends Service {
                 Log.i("UPDATE", "countdown on BEGINNING OF SPEECH");
                 mIsCountDownOn = false;
                 mNoSpeechCountDown.cancel();
-        }
-        Log.i("UPDATE", "countdown off BEGINNING OF SPEECH");
+            }
+            Log.i("UPDATE", "countdown off BEGINNING OF SPEECH");
+            //Log.d(TAG, "onBeginingOfSpeech"); //$NON-NLS-1$
             start_time = System.currentTimeMillis();
-            //Log.d(TAG, "onBeginningOfSpeech"); //$NON-NLS-1$
-    }
-
-    @Override
-    public void onBufferReceived(byte[] buffer) {
-
-    }
-
-    @Override
-    public void onEndOfSpeech() {
-        Log.d("UPDATE", "onEndOfSpeech"); //$NON-NLS-1$
-    }
-
-    @Override
-    public void onError(int error) {
-        if (mIsCountDownOn) {
-            mIsCountDownOn = false;
-            mNoSpeechCountDown.cancel();
-        }
-        mIsListening = false;
-        Message message = Message.obtain(null, MSG_RECOGNIZER_START_LISTENING);
-        try {
-            mServerMessenger.send(message);
-        } catch (RemoteException e) {
-
-        }
-    }
-
-    @Override
-    public void onEvent(int eventType, Bundle params) {
-
-    }
-
-    @Override
-    public void onPartialResults(Bundle partialResults) {
-        Log.i("UPDATE", "onPartialResults");
-        ArrayList data = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-        String word = (String) data.get(data.size() - 1);
-        //if (Currentdata == null) {
-        //MainActivity.textView.setText("" + word);
-        //} else {
-        //MainActivity.textView.setText(Currentdata + " " + word);
-        //MainActivity.textView.setSelection(MainActivity.textView.getText().length());
-        //}
-
-        long curr_time = System.currentTimeMillis();
-
-        newcurrent = MainActivity.textView.getText().toString();
-        identify = 1;
-        Log.i("UPDATE", "" + word);
-
-        n_words = data.size();
-        String curr_speed = speed;
-        n_words_total += n_words;
-        if (curr_time - start_time > 5000) {
-            curr_speed = checkSpeed(n_words_total);
-            start_time = curr_time;
             n_words_total = 0;
+            n_words = 0;
         }
-        Log.i("UPDATE", "TOTAL Number of Words: " + n_words_total);
-        Log.i("Update", "Current Speed is" + speed);
-        Log.i("Update", "New Speed is" + curr_speed);
-        if (curr_speed != speed) {
-            speed = curr_speed;
-            changeColor(speed);
+
+        @Override
+        public void onBufferReceived(byte[] buffer) {
+
         }
-    }
 
-    @Override
-    public void onReadyForSpeech(Bundle params) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            //mIsCountDownOn = true;
-            MainActivity.textView.setText("");
-            //mNoSpeechCountDown.start();
+        @Override
+        public void onEndOfSpeech() {
+            //Log.d(TAG, "onEndOfSpeech"); //$NON-NLS-1$
         }
-        Log.i("UPDATE", "onReadyForSpeech"); //$NON-NLS-1$
-    }
 
-    @Override
-    public void onResults(Bundle results) {
+        @Override
+        public void onError(int error) {
+            if (mIsCountDownOn) {
+                mIsCountDownOn = false;
+                mNoSpeechCountDown.cancel();
+            }
+            mIsListening = false;
+            Message message = Message.obtain(null, MSG_RECOGNIZER_START_LISTENING);
+            try {
+                mServerMessenger.send(message);
+            } catch (RemoteException e) {
 
-        //Log.d(TAG, "onResults"); //$NON-NLS-1$
-        //$NON-NLS-1$
-        //ArrayList data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-        //String word = (String) data.get(data.size() - 1);
-/*
+            }
+        }
+
+        @Override
+        public void onEvent(int eventType, Bundle params) {
+
+        }
+
+        @Override
+        public void onPartialResults(Bundle partialResults) {
+            Log.i("UPDATE", "onPartialResults");
+            ArrayList data = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+            String word = (String) data.get(data.size() - 1);
+            //if (Currentdata == null) {
+            //MainActivity.textView.setText("" + word);
+            //} else {
+            //MainActivity.textView.setText(Currentdata + " " + word);
+            //MainActivity.textView.setSelection(MainActivity.textView.getText().length());
+            //}
+
+            long curr_time = System.currentTimeMillis();
+
+            newcurrent = MainActivity.textView.getText().toString();
+            identify = 1;
+            Log.i("UPDATE", "" + word);
+
+            n_words = data.size();
+            String curr_speed = speed;
+            n_words_total += n_words;
+            if (curr_time - start_time > 5000) {
+                curr_speed = checkSpeed(n_words_total);
+                start_time = curr_time;
+                writer.print(n_words_total + "," + curr_speed + "," + curr_time + "\n");
+                n_words_total = 0;
+            }
+            Log.i("UPDATE", "TOTAL Number of Words: " + n_words_total);
+            Log.i("Update", "Current Speed is" + speed);
+            Log.i("Update", "New Speed is" + curr_speed);
+            if (curr_speed != speed) {
+                speed = curr_speed;
+                changeColor(speed);
+            }
+        }
+
+        @Override
+        public void onReadyForSpeech(Bundle params) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                mIsCountDownOn = true;
+                MainActivity.textView.setText("");
+                mNoSpeechCountDown.start();
+            }
+            Log.i("UPDATE", "onReadyForSpeech"); //$NON-NLS-1$
+        }
+
+        @Override
+        public void onResults(Bundle results) {
+
+            //Log.d(TAG, "onResults"); //$NON-NLS-1$
+            //$NON-NLS-1$
+            ArrayList data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+            String word = (String) data.get(data.size() - 1);
+
             if (result == 0) {
                 MainActivity.textView.setText(word);
                 Currentdata = MainActivity.textView.getText().toString();
@@ -296,44 +309,17 @@ public class MyService extends Service {
                 mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
             }
             result = 0;
+        }
 
-            long curr_time = System.currentTimeMillis();
-
-            newcurrent = MainActivity.textView.getText().toString();
-            identify = 1;
-            Log.i("UPDATE", "" + word);
-
-            n_words = data.size();
-            String curr_speed = speed;
-            if (curr_time - start_time > 5000) {
-                curr_speed = checkSpeed(n_words_total);
-                start_time = curr_time;
-                n_words_total = 0;
-            }
-            n_words_total += n_words;
-            Log.i("UPDATE",  "TOTAL Number of Words: " +  n_words_total);
-            //String curr_speed = checkSpeed(n_words_total, 5000);
-            Log.i("Update", "Current Speed is" + speed);
-            Log.i("Update", "New Speed is" + curr_speed);
-            if (curr_speed != speed) {
-                speed = curr_speed;
-                changeColor(speed);
-            }
-                        */
+        @Override
+        public void onRmsChanged(float rmsdB) {
+            Log.i("UPDATE", "MY SERVICE on RMS changed");
+        }
 
     }
-
-    @Override
-    public void onRmsChanged(float rmsdB) {
-        Log.i("UPDATE", "MY SERVICE on RMS changed");
-    }
-
     private void startListening(String speed) {
         MainActivity.layout.setBackgroundColor(Color.parseColor(GREEN));
     }
-
-}
-
     private void changeColor(String speed) {
         switch(speed) {
             case "Slow":
@@ -345,8 +331,8 @@ public class MyService extends Service {
             default:
                 MainActivity.layout.setBackgroundColor(Color.parseColor(GREEN));
         }
+        //mText.setText(Integer.toString(n_filler));
     }
-
     private String checkSpeed(double n_words){
 
         double curr_speed = 0;

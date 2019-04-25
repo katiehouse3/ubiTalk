@@ -3,6 +3,7 @@ package com.example.ubitalk;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -31,6 +32,8 @@ import android.widget.Toast;
 
 import com.example.ubitalk.R;
 
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
 public class MainActivity extends WearableActivity {
@@ -59,8 +62,11 @@ public class MainActivity extends WearableActivity {
 
     String speed = "On pace";
 
+    PrintWriter writer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
